@@ -377,10 +377,12 @@ namespace Faunus {
             class ChargeMove : public Movebase {
                 private:
                     typedef typename Tspace::Tpvec Tpvec;
-                    Tspace& spc;
+                    Tspace& spc; // Space to operate on
                     Average<double> msqd; // mean squared displacement
+                    //double _sqd // squared displacement
                     double dq=0, deltaq=0, qnew=0, qold=0;
                     int g, atomIndex;
+                    std::string molname; //added
                     Change::data cdata;
 
                     void _to_json(json &j) const override {
@@ -388,6 +390,7 @@ namespace Faunus {
                         j = {
                             {"index", atomIndex},
                             {"dq", dq},
+                            //{"molecule", molname}, //added
                             {rootof + bracket(Delta + "q" + squared), std::sqrt(msqd.avg())},
                             {cuberoot + rootof + bracket(Delta + "q" + squared),
                                 std::cbrt(std::sqrt(msqd.avg()))}
@@ -396,6 +399,7 @@ namespace Faunus {
                     }
 
                     void _from_json(const json &j) override {
+                        //molname = j.at("molecule"); //added
                         dq = j.at("dq");
                         atomIndex = j.at("index");
                     }
@@ -403,13 +407,14 @@ namespace Faunus {
                     void _move(Change &change) override {
                         if (dq>0) {
 
-                            auto git = spc.findGroupContaining( spc.p[atomIndex] );
-                            auto p = spc.p[atomIndex];
-                            cdata.index = std::distance( spc.groups.begin(), git ); // integer *index* of moved group                                                
-                            cdata.atoms[0] = std::distance(git->begin(), spc.p.begin()+atomIndex );  // index of particle rel. to group        
-                            qold = p.charge;
-                            p.charge +=  dq * (slump()-0.5);
-                            deltaq = p.charge-qold;
+                            auto git = spc.findGroupContaining( spc.p[atomIndex] );        
+                            qold = spc.p[atomIndex].charge;
+                            spc.p[atomIndex].charge +=  dq * (slump()-0.5);
+                            deltaq = spc.p[atomIndex].charge-qold;
+                            
+                            cdata.index = std::distance( spc.groups.begin(), git ); // integer *index* of moved group                                                    
+                            cdata.atoms[0] = std::distance(git->begin(), spc.p.begin()+atomIndex );  // index of particle rel. to group                   
+                            change.groups.push_back( cdata ); // add to list of moved groups
                         } else deltaq=0;
                     }
 

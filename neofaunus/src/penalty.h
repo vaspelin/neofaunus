@@ -94,7 +94,7 @@ namespace Faunus {
                         if (property=="y") f = [&i=spc.p.at(index).pos]() { return i.y(); };
                         if (property=="z") f = [&i=spc.p.at(index).pos]() { return i.z(); };
                         if (property=="R") f = [&i=spc.p.at(index).pos]() { return i.norm(); };
-                        // if (property=="charge") f = [&i=spc.p.at(index).q]() { return i; };}
+                        if (property=="charge") f = [&i=spc.p.at(index).charge]() { return i; };
                         if (f==nullptr)
                             throw std::runtime_error(name + ": unknown property '" + property + "'");
                     }
